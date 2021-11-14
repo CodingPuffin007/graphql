@@ -1,8 +1,8 @@
-function Feed(parent, args, context, info) {
+function feed(parent, args, context, info) {
     return context.prisma.findMany()
 }
 
 
 module.exports = {
-    Feed,
+    feed,
 }
