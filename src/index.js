@@ -3,6 +3,11 @@ const fs =  require('fs')
 const path = require('path')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
+const Query = require('./resolvers/Query')
+const Mutation = require('./resolvers/Mutation')
+const User = require('./resolvers/User')
+const Link = require('./resolvers/Link')
+const { getUserId } = require('./utils')
 
 
 
@@ -15,36 +20,33 @@ let links = [{
 
 // 1
 const resolvers = {
-  Query: {
-    info: () => `This is the API of a Hackernews Clone`,
-    feed: async (parent, args, context) => {
-      return context.prisma.link.findMany()
-    },
-  },
-  Mutation: {
-    // 2
-    post: (parent, args, context) => {
-      const newLink = context.prisma.link.create({
-        data: {
-          url: args.url,
-          description: args.description,
-        },
-      })
-      return newLink
-    },  
-  }
+  Query,
+  Mutation,
+  User,
+  Link
 }
 
 
-const Server = new ApolloServer({
-    typeDefs: fs.readFileSync(path.join(__dirname, './Schema/schema.graphql'), 'utf-8'),
-    resolvers,
-    context: {
+const server = new ApolloServer({
+  typeDefs: fs.readFileSync(
+    path.join(__dirname, './Schema/schema.graphql'),
+    'utf8'
+  ),
+  resolvers,
+  context: ({ req }) => {
+    return {
+      ...req,
       prisma,
-    }
-})
+      userId:
+        req && req.headers.authorization
+          ? getUserId(req)
+          : null
+    };
+  }
+ 
+});
 
 
-Server.listen().then(({ url }) => 
+server.listen().then(({ url }) => 
     console.log(`server is running on ${url}`)
 );
